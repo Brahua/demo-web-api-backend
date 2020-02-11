@@ -11,5 +11,7 @@ namespace demo_web_api_backend.Context
     {
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options) { }
         public DbSet<Proyecto> Proyectos { get; set; }
+        public DbSet<Factura> Facturas { get; set; }
+        public DbSet<DetalleFactura> DetallesFactura { get; set; }
     }
 }
