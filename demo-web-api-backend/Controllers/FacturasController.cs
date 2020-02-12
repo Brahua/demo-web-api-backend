@@ -25,14 +25,14 @@ namespace demo_web_api_backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Factura>>> GetFacturas()
         {
-            return await _context.Facturas.ToListAsync();
+            return await _context.Facturas.Include(factura => factura.ListaDetalleFactura).ToListAsync();
         }
 
         // GET: api/Facturas/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Factura>> GetFactura(int id)
         {
-            var factura = await _context.Facturas.FindAsync(id);
+            var factura = await _context.Facturas.Include(factura => factura.ListaDetalleFactura).FirstOrDefaultAsync(factura => factura.Id == id);
 
             if (factura == null)
             {
@@ -81,14 +81,12 @@ namespace demo_web_api_backend.Controllers
                 try
                 {
                     _context.Facturas.Add(factura);
-                    await _context.SaveChangesAsync();
                     if (factura.ListaDetalleFactura != null)
                     {
                         foreach (DetalleFactura detalle in factura.ListaDetalleFactura)
                         {
-                            detalle.Factura = factura;
+                            detalle.FacturaId = factura.Id;
                             _context.DetallesFactura.Add(detalle);
-                            await _context.SaveChangesAsync();
                         }
                     }
                     transaction.Commit();
@@ -98,6 +96,7 @@ namespace demo_web_api_backend.Controllers
                     throw;
                 }
             }
+            await _context.SaveChangesAsync();
             return CreatedAtAction("GetFactura", new { id = factura.Id }, factura);
         }
 
@@ -105,15 +104,32 @@ namespace demo_web_api_backend.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Factura>> DeleteFactura(int id)
         {
-            var factura = await _context.Facturas.FindAsync(id);
+            var factura = await _context.Facturas.Include(factura => factura.ListaDetalleFactura).FirstOrDefaultAsync(factura => factura.Id == id);
             if (factura == null)
             {
                 return NotFound();
             }
 
-            _context.Facturas.Remove(factura);
-            await _context.SaveChangesAsync();
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    List<DetalleFactura> listaDetalleFacturas = factura.ListaDetalleFactura;
+                    foreach (var detalle in listaDetalleFacturas)
+                    {
+                        _context.DetallesFactura.Remove(detalle);
+                    }
 
+                    _context.Facturas.Remove(factura);
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
+            await _context.SaveChangesAsync();
             return factura;
         }
 

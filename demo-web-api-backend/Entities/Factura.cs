@@ -12,7 +12,7 @@ namespace demo_web_api_backend.Entities
         public int NumeroFactura { get; set; }
         public string FechaFactura { get; set; }
         public string Empresa { get; set; }
-        public string MontoTotal { get; set; }
+        public int MontoTotal { get; set; }
         public List<DetalleFactura> ListaDetalleFactura { get; set; }
     }
 }

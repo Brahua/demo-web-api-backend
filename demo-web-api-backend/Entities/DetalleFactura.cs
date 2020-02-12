@@ -11,6 +11,7 @@ namespace demo_web_api_backend.Entities
         public string Descripcion { get; set; }
         public int Cantidad { get; set; }
         public int Monto { get; set; }
+        public int FacturaId { get; set; }
         public Factura Factura { get; set; }
     }
 }
